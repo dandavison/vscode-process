@@ -2,6 +2,10 @@
   "name": "process",
   "displayName": "Process",
   "description": "Start child processes",
+  "repository": {
+    "url": "https://github.com/dandavison/vscode-process",
+    "type": "git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.71.0"
@@ -10,14 +14,18 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:process.helloWorld"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "process.helloWorld",
-        "title": "Hello World"
+        "command": "process.magitStatus",
+        "title": "Emacs Magit Status"
+      },
+      {
+        "command": "process.emacsclient",
+        "title": "Emacs"
       }
     ]
   },

@@ -1,25 +1,36 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+const { spawn } = require('node:child_process');
+const { dirname, resolve } = require('node:path');
 import * as vscode from 'vscode';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const outputChannel = vscode.window.createOutputChannel('Process');
+const log = outputChannel.appendLine;
+outputChannel.show();
+
 export function activate(context: vscode.ExtensionContext) {
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "process" is now active!');
-
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  let disposable = vscode.commands.registerCommand('process.helloWorld', () => {
-    // The code you place here will be executed every time your command is executed
-    // Display a message box to the user
-    vscode.window.showInformationMessage('Hello World from Process!');
-  });
-
-  context.subscriptions.push(disposable);
+  const catalog: [string, () => Promise<void>][] = [
+    ['process.emacsclient', emacsclient],
+    ['process.magitStatus', magitStatus],
+  ];
+  for (const [command, handler] of catalog) {
+    context.subscriptions.push(vscode.commands.registerCommand(command, handler));
+  }
 }
 
-// this method is called when your extension is deactivated
 export function deactivate() {}
+
+async function emacsclient() {
+  const path = vscode.window.activeTextEditor?.document.uri.path;
+  spawn('emacsclient', ['-n', path]);
+}
+
+async function magitStatus(): Promise<void> {
+  const cwd = dirname(vscode.window.activeTextEditor?.document.uri.path);
+  log(`Running in ${cwd} (resolve => ${resolve(cwd)})`);
+  const result = spawn('bash', ['/Users/ddavison/src/emacs-config/bin/emacs-magit-status'], { cwd });
+  result.stderr.on('data', (data: string) => {
+    log(`stderr: ${data}`);
+  });
+  result.stdout.on('data', (data: string) => {
+    log(`stdout: ${data}`);
+  });
+}
